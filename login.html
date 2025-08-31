@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion & Inscription</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .form-container {
+            padding: 40px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+            outline: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .toggle-form a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .toggle-form a:hover {
+            text-decoration: underline;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .welcome-message h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .user-info {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .notification {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Formulaire de connexion -->
+        <div id="loginForm" class="form-container">
+            <h1>Connexion</h1>
+            <div id="loginMessage"></div>
+            <form id="login">
+                <div class="input-group">
+                    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+                </div>
+                <button type="submit" class="btn">Se connecter</button>
+            </form>
+            <div class="toggle-form">
+                Pas encore de compte? <a href="#" id="showRegister">S'inscrire</a>
+            </div>
+        </div>
+        
+        <!-- Formulaire d'inscription -->
+        <div id="registerForm" class="form-container hidden">
+            <h1>Inscription</h1>
+            <div id="registerMessage"></div>
+            <form id="register">
+                <div class="input-group">
+                    <input type="text" id="registerUsername" placeholder="Nom d'utilisateur" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="registerPassword" placeholder="Mot de passe" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="confirmPassword" placeholder="Confirmer le mot de passe" required>
+                </div>
+                <button type="submit" class="btn">S'inscrire</button>
+            </form>
+            <div class="toggle-form">
+                Déjà un compte? <a href="#" id="showLogin">Se connecter</a>
+            </div>
+        </div>
+        
+        <!-- Page de bienvenue -->
+        <div id="welcomePage" class="welcome-message hidden">
+            <h2>Bienvenue <span id="usernameDisplay"></span>!</h2>
+            <div class="user-info">
+                <p>Vous êtes maintenant connecté à votre compte.</p>
+                <p>Vos informations sont stockées de manière sécurisée dans notre base de données.</p>
+            </div>
+            <button id="logoutBtn" class="btn logout-btn">Se déconnecter</button>
+        </div>
+    </div>
+
+    <script>
+        // Simulation d'une base de données (dans une vraie application, ce serait côté serveur)
+        let usersDB = JSON.parse(localStorage.getItem('usersDB')) || [];
+        let currentUser = localStorage.getItem('currentUser');
+        
+        // Elements DOM
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const welcomePage = document.getElementById('welcomePage');
+        const showRegister = document.getElementById('showRegister');
+        const showLogin = document.getElementById('showLogin');
+        const loginFormEl = document.getElementById('login');
+        const registerFormEl = document.getElementById('register');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginMessage = document.getElementById('loginMessage');
+        const registerMessage = document.getElementById('registerMessage');
+        const usernameDisplay = document.getElementById('usernameDisplay');
+        
+        // Initialisation
+        function init() {
+            if (currentUser) {
+                showWelcomePage();
+            } else {
+                showLoginForm();
+            }
+        }
+        
+        // Afficher le formulaire de connexion
+        function showLoginForm() {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            welcomePage.classList.add('hidden');
+        }
+        
+        // Afficher le formulaire d'inscription
+        function showRegisterForm() {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            welcomePage.classList.add('hidden');
+        }
+        
+        // Afficher la page de bienvenue
+        function showWelcomePage() {
+            loginForm.classList.add('hidden');
+            registerForm.classList.add('hidden');
+            welcomePage.classList.remove('hidden');
+            usernameDisplay.textContent = currentUser;
+        }
+        
+        // Afficher un message de notification
+        function showMessage(element, message, type) {
+            element.innerHTML = `<div class="notification ${type}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 3000);
+        }
+        
+        // Inscription d'un utilisateur
+        registerFormEl.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Vérifier si les mots de passe correspondent
+            if (password !== confirmPassword) {
+                showMessage(registerMessage, "Les mots de passe ne correspondent pas", "error");
+                return;
+            }
+            
+            // Vérifier si l'utilisateur existe déjà
+            if (usersDB.some(user => user.username === username)) {
+                showMessage(registerMessage, "Ce nom d'utilisateur existe déjà", "error");
+                return;
+            }
+            
+            // Ajouter l'utilisateur à la "base de données"
+            usersDB.push({ username, password });
+            localStorage.setItem('usersDB', JSON.stringify(usersDB));
+            
+            showMessage(registerMessage, "Inscription réussie! Vous pouvez maintenant vous connecter", "success");
+            
+            // Réinitialiser le formulaire
+            registerFormEl.reset();
+            
+            // Rediriger vers le formulaire de connexion après 2 secondes
+            setTimeout(() => {
+                showLoginForm();
+            }, 2000);
+        });
+        
+        // Connexion d'un utilisateur
+        loginFormEl.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Vérifier les identifiants
+            const user = usersDB.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = username;
+                localStorage.setItem('currentUser', currentUser);
+                showWelcomePage();
+            } else {
+                showMessage(loginMessage, "Nom d'utilisateur ou mot de passe incorrect", "error");
+            }
+        });
+        
+        // Déconnexion
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            showLoginForm();
+            loginFormEl.reset();
+        });
+        
+        // Navigation entre les formulaires
+        showRegister.addEventListener('click', function(e) {
+            e.preventDefault();
+            showRegisterForm();
+        });
+        
+        showLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLoginForm();
+        });
+        
+        // Initialiser l'application
+        init();
+    </script>
+</body>
+</html>
